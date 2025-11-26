@@ -1,4 +1,4 @@
-import 'package:app_comidas/pages/inicio.dart';
+import 'pages/inicio.dart';
 import 'package:flutter/material.dart';
 
 // En su forma actual, solo le indica a Flutter que ejecute la app definida en MyApp.

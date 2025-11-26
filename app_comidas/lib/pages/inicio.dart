@@ -1,4 +1,5 @@
 import 'package:app_comidas/pages/login.dart';
+import 'package:app_comidas/pages/register.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -183,8 +184,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   // Función para navegar a la pantalla de Registro
   void _navigateToRegister() {
-    // TODO: Implementar navegación a pantalla de Registro
-    _showComingSoonSnackbar('Registrarse');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+    );
   }
 
   void _showComingSoonSnackbar(String feature) {
