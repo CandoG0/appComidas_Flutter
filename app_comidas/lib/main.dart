@@ -1,4 +1,4 @@
-import 'package:app_comidas/pages/home.dart';
+import 'package:app_comidas/pages/inicio.dart';
 import 'package:flutter/material.dart';
 
 // En su forma actual, solo le indica a Flutter que ejecute la app definida en MyApp.
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       ),
       title: 'Flutter Demo',
       //Construir con un diseño predefinido
-      home: const Home()
+      home: const WelcomeScreen()
     );
   }
 }

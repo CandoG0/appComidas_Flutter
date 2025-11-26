@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'carrito.dart';
 
-class Local extends StatefulWidget {
-  const Local({super.key});
+class LocalScreen extends StatefulWidget {
+  const LocalScreen({super.key});
 
   @override
-  State<Local> createState() => _LocalState();
+  State<LocalScreen> createState() => _LocalScreenState();
 }
 
-class _LocalState extends State<Local> {
+class _LocalScreenState extends State<LocalScreen> {
   final SearchController _searchController = SearchController();
   bool isDark = false;
 

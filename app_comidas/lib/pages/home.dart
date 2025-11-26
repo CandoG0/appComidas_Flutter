@@ -1,5 +1,7 @@
+import 'package:app_comidas/pages/perfil.dart' show PerfilScreen;
 import 'package:flutter/material.dart';
-import 'local.dart'; // Importa la pantalla Local
+import 'local.dart'; // Tu pantalla de locales
+import 'perfil.dart'; // Tu nueva pantalla de perfil
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -19,7 +21,152 @@ class _HomeState extends State<Home> {
   final Color backgroundColor = const Color(0xFFF4F4F8); // Fondo gris claro
   final Color textColor = const Color(0xFF2A2C41); // Texto oscuro
 
-  // Datos de ejemplo para los locales
+  // Lista de pantallas/páginas
+  final List<Widget> _pages = [
+    const HomeContent(), // Contenido del Home
+    const OrdersScreen(), // Pantalla de Pedidos (placeholder por ahora)
+    const PerfilScreen(), // Tu pantalla de perfil
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: _currentIndex == 0 ? _buildCustomAppBar() : null,
+      body: _pages[_currentIndex],
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  // Toolbar personalizada con color primario (solo para Home)
+  PreferredSizeWidget _buildCustomAppBar() {
+    return AppBar(
+      backgroundColor: primaryColor,
+      elevation: 0,
+      flexibleSpace: Padding(
+        padding: const EdgeInsets.only(top: 50.0, left: 16.0, right: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getCurrentDate(),
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '¡Hola, Juan Pérez!',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+      toolbarHeight: 100,
+    );
+  }
+
+  // Navegación inferior con colores personalizados
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      height: 65,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: textColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: textColor.withOpacity(0.5),
+        selectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: primaryColor,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: textColor.withOpacity(0.5),
+        ),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: 'Pedidos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outlined),
+            activeIcon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    final days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    final months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+
+    return '${days[now.weekday - 1]}, ${now.day} de ${months[now.month - 1]} de ${now.year}';
+  }
+}
+
+// Contenido del Home (separado para mejor organización)
+class HomeContent extends StatefulWidget {
+  const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  final SearchController _searchController = SearchController();
+  final Color primaryColor = const Color(0xFFFF724C);
+  final Color textColor = const Color(0xFF2A2C41);
+  final Color backgroundColor = const Color(0xFFF4F4F8);
+
   final List<Map<String, dynamic>> _locales = [
     {
       'image':
@@ -55,7 +202,6 @@ class _HomeState extends State<Home> {
     },
   ];
 
-  // Lista filtrada para la búsqueda
   List<Map<String, dynamic>> get _filteredLocales {
     if (_searchController.text.isEmpty) {
       return _locales;
@@ -76,50 +222,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: _buildCustomAppBar(),
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  // Toolbar personalizada con color primario
-  PreferredSizeWidget _buildCustomAppBar() {
-    return AppBar(
-      backgroundColor: primaryColor,
-      elevation: 0,
-      flexibleSpace: Padding(
-        padding: const EdgeInsets.only(top: 50.0, left: 16.0, right: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getCurrentDate(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              '¡Hola, Juan Pérez!',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      toolbarHeight: 100,
-    );
-  }
-
-  // Cuerpo principal con barra de búsqueda y tarjetas
-  Widget _buildBody() {
     return Column(
       children: [
         // Barra de búsqueda
@@ -163,10 +265,6 @@ class _HomeState extends State<Home> {
 
                   return suggestions.map((local) {
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: secondaryColor.withOpacity(0.2),
-                        child: Icon(Icons.store, color: primaryColor),
-                      ),
                       title: Text(
                         local['title'],
                         style: TextStyle(
@@ -181,19 +279,7 @@ class _HomeState extends State<Home> {
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.star, color: Colors.amber, size: 16),
-                              Text(
-                                local['rating'],
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-                            ],
-                          ),
+                          
                           Text(
                             local['tiempo'],
                             style: TextStyle(
@@ -317,7 +403,7 @@ class _HomeState extends State<Home> {
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: 150,
-                  color: secondaryColor.withOpacity(0.1),
+                  color: const Color(0xFFFDBF50).withOpacity(0.1),
                   child: Icon(Icons.store, size: 50, color: primaryColor),
                 );
               },
@@ -382,7 +468,7 @@ class _HomeState extends State<Home> {
                       // Navegar a la pantalla Local
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const Local()),
+                        MaterialPageRoute(builder: (context) => const LocalScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -393,12 +479,12 @@ class _HomeState extends State<Home> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.storefront, size: 20), // Icono cambiado
-                        const SizedBox(width: 8),
-                        const Text(
+                        Icon(Icons.storefront, size: 20),
+                        SizedBox(width: 8),
+                        Text(
                           'Visitar Local',
                           style: TextStyle(
                             fontSize: 16,
@@ -416,78 +502,31 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+}
 
-  // Navegación inferior
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 65,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: textColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+// Pantalla de Pedidos (placeholder por ahora)
+class OrdersScreen extends StatelessWidget {
+  const OrdersScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            'Pantalla de Pedidos',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textColor.withOpacity(0.5),
-        selectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: primaryColor,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: textColor.withOpacity(0.5),
-        ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: 'Pedidos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outlined),
-            activeIcon: Icon(Icons.person),
-            label: 'Perfil',
+          SizedBox(height: 8),
+          Text(
+            'Aquí verás tu historial de pedidos',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
       ),
     );
-  }
-
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    final days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-
-    return '${days[now.weekday - 1]}, ${now.day} de ${months[now.month - 1]} de ${now.year}';
   }
 }
