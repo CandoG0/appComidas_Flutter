@@ -1,3 +1,4 @@
+import 'package:app_comidas/pages/info_pedido.dart' show ConfirmScreen;
 import 'package:flutter/material.dart';
 
 class CartScreen extends StatefulWidget {
@@ -55,27 +56,14 @@ class _CartScreenState extends State<CartScreen> {
   void _realizarPedido() {
     if (widget.cartItems.isEmpty) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: primaryColor,
-        content: Text(
-          '¡Pedido realizado por MX\$${totalPrice.toStringAsFixed(2)}!',
-          style: const TextStyle(color: Colors.white),
-        ),
-        duration: const Duration(seconds: 3),
+    // Navegar a la pantalla de confirmación
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ConfirmScreen(cartItems: widget.cartItems, totalPrice: totalPrice),
       ),
     );
-
-    // Limpiar el carrito
-    widget.cartItems.clear();
-    widget.onCartUpdated(widget.cartItems);
-
-    // Regresar a la pantalla anterior después de un breve delay
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    });
   }
 
   @override
@@ -360,13 +348,12 @@ class _CartScreenState extends State<CartScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             ),
             child: const Text(
-              'Realizar Pedido',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              'Continuar con el Pedido',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ],
       ),
     );
   }
-
 }
