@@ -1,159 +1,9 @@
 import 'package:app_comidas/pages/perfil.dart' show PerfilScreen;
 import 'package:flutter/material.dart';
+import '../services/local_service.dart'; // Cambiado a local_service
 import 'local.dart'; // Tu pantalla de locales
 import 'perfil.dart'; // Tu nueva pantalla de perfil
 
-class Home extends StatefulWidget {
-  const Home({super.key});
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  int _currentIndex = 0;
-  final SearchController _searchController = SearchController();
-  bool isDark = false;
-
-  // Definición de colores de la paleta
-  final Color primaryColor = const Color(0xFFFF724C); // Naranja principal
-  final Color secondaryColor = const Color(0xFFFDBF50); // Amarillo
-  final Color backgroundColor = const Color(0xFFF4F4F8); // Fondo gris claro
-  final Color textColor = const Color(0xFF2A2C41); // Texto oscuro
-
-  // Lista de pantallas/páginas
-  final List<Widget> _pages = [
-    const HomeContent(), // Contenido del Home
-    const OrdersScreen(), // Pantalla de Pedidos (placeholder por ahora)
-    const PerfilScreen(), // Tu pantalla de perfil
-  ];
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: _currentIndex == 0 ? _buildCustomAppBar() : null,
-      body: _pages[_currentIndex],
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  // Toolbar personalizada con color primario (solo para Home)
-  PreferredSizeWidget _buildCustomAppBar() {
-    return AppBar(
-      backgroundColor: primaryColor,
-      elevation: 0,
-      flexibleSpace: Padding(
-        padding: const EdgeInsets.only(top: 50.0, left: 16.0, right: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getCurrentDate(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              '¡Hola, Juan Pérez!',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      toolbarHeight: 100,
-    );
-  }
-
-  // Navegación inferior con colores personalizados
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 65,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: textColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textColor.withOpacity(0.5),
-        selectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: primaryColor,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: textColor.withOpacity(0.5),
-        ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: 'Pedidos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outlined),
-            activeIcon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    final days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-
-    return '${days[now.weekday - 1]}, ${now.day} de ${months[now.month - 1]} de ${now.year}';
-  }
-}
-
-// Contenido del Home (separado para mejor organización)
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
 
@@ -167,51 +17,62 @@ class _HomeContentState extends State<HomeContent> {
   final Color textColor = const Color(0xFF2A2C41);
   final Color backgroundColor = const Color(0xFFF4F4F8);
 
-  final List<Map<String, dynamic>> _locales = [
-    {
-      'image':
-          'https://via.placeholder.com/300x200/FF724C/FFFFFF?text=Doña+Mari',
-      'title': 'Local de Doña Mari',
-      'description': 'Comida mexicana tradicional - Tacos, quesadillas y más',
-      'rating': '4.8',
-      'tiempo': '15-20 min',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/FDBF50/2A2C41?text=Burger+House',
-      'title': 'Burger House',
-      'description': 'Hamburguesas gourmet y papas fritas',
-      'rating': '4.5',
-      'tiempo': '10-15 min',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/2A2C41/F4F4F8?text=Pizza+Italia',
-      'title': 'Pizza Italia',
-      'description': 'Pizzas artesanales y pastas frescas',
-      'rating': '4.7',
-      'tiempo': '20-25 min',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/F4F4F8/2A2C41?text=Sushi+Bar',
-      'title': 'Sushi Bar',
-      'description': 'Sushi fresco y platos japoneses',
-      'rating': '4.9',
-      'tiempo': '25-30 min',
-    },
-  ];
+  List<Map<String, dynamic>> _locales = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocales();
+  }
+
+  // Cargar locales desde la API
+  void _loadLocales() async {
+    try {
+      final locales =
+          await LocalService.getLocales(); // Cambiado a LocalService
+      setState(() {
+        _locales = locales;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error cargando locales: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Buscar locales
+  void _searchLocales(String query) async {
+    if (query.isEmpty) {
+      _loadLocales(); // Recargar todos si la búsqueda está vacía
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final resultados = await LocalService.searchLocales(
+        query,
+      ); // Cambiado a LocalService
+      setState(() {
+        _locales = resultados;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error buscando locales: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredLocales {
-    if (_searchController.text.isEmpty) {
-      return _locales;
-    }
-    return _locales.where((local) {
-      final title = local['title'].toString().toLowerCase();
-      final description = local['description'].toString().toLowerCase();
-      final searchText = _searchController.text.toLowerCase();
-      return title.contains(searchText) || description.contains(searchText);
-    }).toList();
+    return _locales;
   }
 
   @override
@@ -237,8 +98,8 @@ class _HomeContentState extends State<HomeContent> {
                 onTap: () {
                   controller.openView();
                 },
-                onChanged: (_) {
-                  controller.openView();
+                onChanged: (value) {
+                  _searchLocales(value);
                 },
                 leading: Icon(Icons.search, color: primaryColor),
                 trailing: [
@@ -246,6 +107,7 @@ class _HomeContentState extends State<HomeContent> {
                     IconButton(
                       onPressed: () {
                         controller.clear();
+                        _loadLocales(); // Recargar todos los locales
                         setState(() {});
                       },
                       icon: Icon(Icons.close, color: primaryColor),
@@ -257,45 +119,44 @@ class _HomeContentState extends State<HomeContent> {
             },
             suggestionsBuilder:
                 (BuildContext context, SearchController controller) {
-                  final suggestions = _locales.where((local) {
-                    final title = local['title'].toString().toLowerCase();
-                    final searchText = controller.text.toLowerCase();
-                    return title.contains(searchText);
-                  }).toList();
-
-                  return suggestions.map((local) {
-                    return ListTile(
-                      title: Text(
-                        local['title'],
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Text(
-                        local['description'],
-                        style: TextStyle(color: textColor.withOpacity(0.7)),
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          
-                          Text(
-                            local['tiempo'],
+                  return _locales
+                      .where((local) {
+                        final title = local['title'].toString().toLowerCase();
+                        final searchText = controller.text.toLowerCase();
+                        return title.contains(searchText);
+                      })
+                      .map((local) {
+                        return ListTile(
+                          title: Text(
+                            local['title'],
                             style: TextStyle(
-                              fontSize: 12,
-                              color: textColor.withOpacity(0.6),
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ],
-                      ),
-                      onTap: () {
-                        setState(() {
-                          controller.closeView(local['title']);
-                        });
-                      },
-                    );
-                  });
+                          subtitle: Text(
+                            local['description'],
+                            style: TextStyle(color: textColor.withOpacity(0.7)),
+                          ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                local['tiempo'],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: textColor.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            setState(() {
+                              controller.closeView(local['title']);
+                            });
+                          },
+                        );
+                      });
                 },
           ),
         ),
@@ -306,20 +167,57 @@ class _HomeContentState extends State<HomeContent> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _searchController.text.isEmpty
-                    ? 'Locales disponibles'
-                    : 'Resultados: ${_filteredLocales.length}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: textColor.withOpacity(0.7),
+              if (_isLoading)
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Cargando locales...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: textColor.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                )
+              else if (_errorMessage.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                Text(
+                  _searchController.text.isEmpty
+                      ? 'Locales disponibles (${_locales.length})'
+                      : 'Resultados: ${_locales.length}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: textColor.withOpacity(0.7),
+                  ),
                 ),
-              ),
-              if (_searchController.text.isNotEmpty)
+              if (_searchController.text.isNotEmpty && !_isLoading)
                 TextButton(
                   onPressed: () {
                     _searchController.clear();
+                    _loadLocales();
                     setState(() {});
                   },
                   child: Text('Limpiar', style: TextStyle(color: primaryColor)),
@@ -328,9 +226,13 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
 
-        // Lista de tarjetas filtradas
+        // Lista de tarjetas
         Expanded(
-          child: _filteredLocales.isEmpty
+          child: _isLoading
+              ? _buildLoadingState()
+              : _errorMessage.isNotEmpty
+              ? _buildErrorState()
+              : _filteredLocales.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -341,6 +243,77 @@ class _HomeContentState extends State<HomeContent> {
                 ),
         ),
       ],
+    );
+  }
+
+  // Estado de carga
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Cargando locales...',
+            style: TextStyle(
+              fontSize: 18,
+              color: textColor.withOpacity(0.7),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Estado de error
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 80,
+            color: Colors.red.withOpacity(0.7),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error de conexión',
+            style: TextStyle(
+              fontSize: 18,
+              color: textColor.withOpacity(0.7),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.5)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadLocales,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -362,8 +335,11 @@ class _HomeContentState extends State<HomeContent> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Intenta con otros términos de búsqueda',
+            _searchController.text.isEmpty
+                ? 'No hay locales disponibles en este momento'
+                : 'No se encontraron resultados para "${_searchController.text}"',
             style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.4)),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -416,7 +392,7 @@ class _HomeContentState extends State<HomeContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                //Titulo
+                // Título
                 Text(
                   local['title'],
                   style: TextStyle(
@@ -435,41 +411,96 @@ class _HomeContentState extends State<HomeContent> {
                     fontSize: 14,
                     color: textColor.withOpacity(0.7),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
                 const SizedBox(height: 12),
 
-                // Tiempo de entrega
-                Row(
+                // Información adicional
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: textColor.withOpacity(0.6),
+                    // Horario
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: textColor.withOpacity(0.6),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Horario: ${local['horario']}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textColor.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Tiempo estimado: ${local['tiempo']}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: textColor.withOpacity(0.6),
+                    const SizedBox(height: 4),
+                    // Tiempo estimado
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.delivery_dining,
+                          size: 16,
+                          color: textColor.withOpacity(0.6),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Tiempo estimado: ${local['tiempo']}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textColor.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (local['domicilio'] != null) ...[
+                      const SizedBox(height: 4),
+                      // Domicilio
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: textColor.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '${local['domicilio']}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: textColor.withOpacity(0.6),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ],
                 ),
 
                 const SizedBox(height: 16),
 
-                // Botón de acción - Navega a la pantalla Local
+                // Botón de acción
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navegar a la pantalla Local
-                      Navigator.push(
+                      // Navegar a la pantalla Local pasando el ID
+/*                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LocalScreen()),
-                      );
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              LocalScreen(localId: local['id']),
+                        ),
+                      ); */
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -497,33 +528,6 @@ class _HomeContentState extends State<HomeContent> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Pantalla de Pedidos (placeholder por ahora)
-class OrdersScreen extends StatelessWidget {
-  const OrdersScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Pantalla de Pedidos',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Aquí verás tu historial de pedidos',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
       ),

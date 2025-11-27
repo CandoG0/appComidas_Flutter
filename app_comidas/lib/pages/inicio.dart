@@ -1,6 +1,7 @@
 import 'package:app_comidas/pages/login.dart';
 import 'package:app_comidas/pages/register.dart';
 import 'package:flutter/material.dart';
+import '../utils/dimensions.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -22,6 +23,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: backgroundColor,
       body: SafeArea(
         child: Container(
+          
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,

@@ -358,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToHome() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const Home()),
+      MaterialPageRoute(builder: (context) => const HomeContent()),
       (route) => false,
     );
   }
