@@ -1,3 +1,4 @@
+import 'package:app_comidas/pages/register.dart';
 import 'package:flutter/material.dart';
 import 'home.dart'; // Tu pantalla principal
 
@@ -365,8 +366,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Navegar al Registro
   void _navigateToRegister() {
-    // TODO: Implementar navegación a pantalla de Registro
-    _showComingSoonSnackbar('Registro');
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+      (route) => false,
+    );
   }
 
   // Mostrar diálogo de error
@@ -374,11 +378,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Text('Error de autenticación'),
-          ],
-        ),
+        title: const Row(children: [Text('Error de autenticación')]),
         content: const Text(
           'El nombre de usuario o contraseña son incorrectos. '
           'Por favor verifica tus credenciales e intenta nuevamente.',
