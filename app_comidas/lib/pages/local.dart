@@ -1,8 +1,16 @@
+import 'package:app_comidas/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'carrito.dart';
 
 class LocalScreen extends StatefulWidget {
-  const LocalScreen({super.key});
+  final int localId;
+  final String localName; // Añadimos el nombre del local
+  
+  const LocalScreen({
+    super.key,
+    required this.localId,
+    required this.localName,
+  });
 
   @override
   State<LocalScreen> createState() => _LocalScreenState();
@@ -10,161 +18,153 @@ class LocalScreen extends StatefulWidget {
 
 class _LocalScreenState extends State<LocalScreen> {
   final SearchController _searchController = SearchController();
-  bool isDark = false;
+  bool isLoading = true;
+  bool hasError = false;
+  String errorMessage = '';
 
-  // Definición de colores de la paleta
-  final Color primaryColor = const Color(0xFFFF724C); // Naranja principal
-  final Color secondaryColor = const Color(0xFFFDBF50); // Amarillo
-  final Color backgroundColor = const Color(0xFFF4F4F8); // Fondo gris claro
-  final Color textColor = const Color(0xFF2A2C41); // Texto oscuro
+  final Color primaryColor = const Color(0xFFFF724C);
+  final Color secondaryColor = const Color(0xFFFDBF50);
+  final Color backgroundColor = const Color(0xFFF4F4F8);
+  final Color textColor = const Color(0xFF2A2C41);
 
   // Variables para el carrito
   List<Map<String, dynamic>> cartItems = [];
   double get totalPrice {
     return cartItems.fold(0, (sum, item) {
-      final priceString = item['price']
-          .replaceAll('\$', '')
-          .replaceAll(',', '');
-      final price = double.tryParse(priceString) ?? 0;
+      final priceString = item['price']?.toString() ?? '0';
+      final price = double.tryParse(priceString.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
       return sum + price;
     });
   }
 
   // Categorías
-  final List<String> categories = [
-    'Todos',
-    'Comida Rápida',
-    'Postres',
-    'Bebidas',
+  List<Map<String, dynamic>> categories = [
+    {'cat_id': 0, 'cat_nombre': 'Todos'},
   ];
   int selectedCategoryIndex = 0;
 
-  // Datos de ejemplo para las tarjetas organizados por categoría
-  final List<Map<String, dynamic>> _productCards = [
-    // Comida Rápida
-    {
-      'image': 'https://via.placeholder.com/300x200/FF724C/FFFFFF?text=Tacos',
-      'title': 'Tacos al Pastor',
-      'description': 'Deliciosos tacos con piña y cebolla',
-      'price': '15.00',
-      'id': '1',
-      'category': 'Comida Rápida',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/FDBF50/2A2C41?text=Quesadillas',
-      'title': 'Quesadillas',
-      'description': 'Quesadillas de queso manchego con tortilla recién hecha',
-      'price': '12.00',
-      'id': '2',
-      'category': 'Comida Rápida',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/2A2C41/F4F4F8?text=Gorditas',
-      'title': 'Gorditas',
-      'description': 'Gorditas rellenas de tu elección',
-      'price': '18.00',
-      'id': '3',
-      'category': 'Comida Rápida',
-    },
-    {
-      'image': 'https://via.placeholder.com/300x200/F4F4F8/2A2C41?text=Tortas',
-      'title': 'Tortas Mexicanas',
-      'description': 'Tortas con jamón, queso y aguacate',
-      'price': '25.00',
-      'id': '4',
-      'category': 'Comida Rápida',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Hamburguesa',
-      'title': 'Hamburguesa Especial',
-      'description': 'Hamburguesa con carne, queso, lechuga y tomate',
-      'price': '35.00',
-      'id': '5',
-      'category': 'Comida Rápida',
-    },
+  // Productos
+  List<Map<String, dynamic>> _productCards = [];
+  List<Map<String, dynamic>> _allProducts = [];
 
-    // Postres
-    {
-      'image': 'https://via.placeholder.com/300x200/9C27B0/FFFFFF?text=Flan',
-      'title': 'Flan Napolitano',
-      'description': 'Delicioso flan con caramelo',
-      'price': '25.00',
-      'id': '6',
-      'category': 'Postres',
-    },
-    {
-      'image': 'https://via.placeholder.com/300x200/E91E63/FFFFFF?text=Pastel',
-      'title': 'Pastel de Chocolate',
-      'description': 'Rebanada de pastel de chocolate belga',
-      'price': '30.00',
-      'id': '7',
-      'category': 'Postres',
-    },
-    {
-      'image': 'https://via.placeholder.com/300x200/FF9800/FFFFFF?text=Churros',
-      'title': 'Churros con Chocolate',
-      'description': 'Churros recién hechos con chocolate caliente',
-      'price': '20.00',
-      'id': '8',
-      'category': 'Postres',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/795548/FFFFFF?text=Gelatina',
-      'title': 'Gelatina de Mosaico',
-      'description': 'Gelatina con frutas y crema',
-      'price': '15.00',
-      'id': '9',
-      'category': 'Postres',
-    },
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-    // Bebidas
-    {
-      'image': 'https://via.placeholder.com/300x200/2196F3/FFFFFF?text=Agua',
-      'title': 'Agua Fresca de Horchata',
-      'description': 'Refrescante agua de horchata natural',
-      'price': '12.00',
-      'id': '10',
-      'category': 'Bebidas',
-    },
-    {
-      'image': 'https://via.placeholder.com/300x200/FF5722/FFFFFF?text=Jugo',
-      'title': 'Jugo de Naranja Natural',
-      'description': 'Jugo de naranja recién exprimido',
-      'price': '15.00',
-      'id': '11',
-      'category': 'Bebidas',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/607D8B/FFFFFF?text=Refresco',
-      'title': 'Refresco en Lata',
-      'description': 'Refresco de 355ml variedad de sabores',
-      'price': '18.00',
-      'id': '12',
-      'category': 'Bebidas',
-    },
-    {
-      'image':
-          'https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Limonada',
-      'title': 'Limonada Mineral',
-      'description': 'Limonada con agua mineral y menta',
-      'price': '20.00',
-      'id': '13',
-      'category': 'Bebidas',
-    },
-  ];
+  Future<void> _loadData() async {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+      errorMessage = '';
+    });
 
-  // Lista filtrada para la búsqueda y categoría
+    try {
+      // Cargar categorías
+      final categoriasData = await ApiService.getCategorias();
+      if (categoriasData.isNotEmpty) {
+        setState(() {
+          categories = [
+            {'cat_id': 0, 'cat_nombre': 'Todos'},
+            ...categoriasData.map((cat) {
+              if (cat is Map) {
+                return {
+                  'cat_id': cat['cat_id'] ?? 0,
+                  'cat_nombre': cat['cat_nombre'] ?? 'Sin nombre',
+                };
+              }
+              return {'cat_id': 0, 'cat_nombre': 'Error'};
+            }).toList(),
+          ];
+        });
+      }
+
+      // Cargar platillos
+      final platillosData = await ApiService.getPlatillosByLocal(widget.localId);
+      
+      List<Map<String, dynamic>> formattedProducts = [];
+      
+      if (platillosData.isNotEmpty) {
+        formattedProducts = platillosData.map((platillo) {
+          if (platillo is Map) {
+            return {
+              'pla_id': platillo['pla_id']?.toString() ?? '0',
+              'title': platillo['title']?.toString() ?? 
+                       platillo['pla_nombre']?.toString() ?? 'Sin nombre',
+              'description': platillo['description']?.toString() ?? 
+                           platillo['pla_descripcion']?.toString() ?? 'Sin descripción',
+              'price': platillo['price']?.toString() ?? 
+                      platillo['pla_precio']?.toString() ?? '0.00',
+              'category': platillo['category']?.toString() ?? 
+                         platillo['categoria_nombre']?.toString() ?? 'Sin categoría',
+              'image': platillo['image']?.toString() ?? 
+                      platillo['arc_ruta']?.toString() ?? 
+                      'https://via.placeholder.com/300x200/FF724C/FFFFFF?text=${Uri.encodeComponent(platillo['title']?.toString() ?? 'Producto')}',
+              'stock': platillo['stock'] ?? platillo['pla_stock'] ?? 0,
+            };
+          }
+          return {
+            'pla_id': '0',
+            'title': 'Error en formato',
+            'description': 'Los datos no están en el formato esperado',
+            'price': '0.00',
+            'category': 'Error',
+            'image': 'https://via.placeholder.com/300x200/FF0000/FFFFFF?text=Error',
+            'stock': 0,
+          };
+        }).toList();
+      }
+
+      setState(() {
+        _productCards = formattedProducts;
+        _allProducts = List.from(formattedProducts);
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+      setState(() {
+        hasError = true;
+        errorMessage = 'Error al cargar los datos: $e';
+        _productCards = _getExampleData();
+        _allProducts = List.from(_productCards);
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _getExampleData() {
+    return [
+      {
+        'pla_id': '1',
+        'title': 'Tacos al Pastor',
+        'description': 'Deliciosos tacos con piña y cebolla',
+        'price': '12.00',
+        'category': 'Comida Rápida',
+        'image': 'https://via.placeholder.com/300x200/FF724C/FFFFFF?text=Tacos',
+        'stock': 100,
+      },
+      {
+        'pla_id': '2',
+        'title': 'Hamburguesa Clásica',
+        'description': 'Hamburguesa con papas',
+        'price': '120.00',
+        'category': 'Comida Rápida',
+        'image': 'https://via.placeholder.com/300x200/FDBF50/2A2C41?text=Hamburguesa',
+        'stock': 50,
+      },
+    ];
+  }
+
+  // Lista filtrada
   List<Map<String, dynamic>> get _filteredProducts {
     List<Map<String, dynamic>> filtered = _productCards;
 
     // Filtrar por categoría
-    if (selectedCategoryIndex > 0) {
-      final selectedCategory = categories[selectedCategoryIndex];
+    if (selectedCategoryIndex > 0 && categories.length > selectedCategoryIndex) {
+      final selectedCategory = categories[selectedCategoryIndex]['cat_nombre'];
       filtered = filtered
           .where((product) => product['category'] == selectedCategory)
           .toList();
@@ -174,8 +174,8 @@ class _LocalScreenState extends State<LocalScreen> {
     if (_searchController.text.isNotEmpty) {
       final searchText = _searchController.text.toLowerCase();
       filtered = filtered.where((product) {
-        final title = product['title'].toString().toLowerCase();
-        final description = product['description'].toString().toLowerCase();
+        final title = product['title']?.toString().toLowerCase() ?? '';
+        final description = product['description']?.toString().toLowerCase() ?? '';
         return title.contains(searchText) || description.contains(searchText);
       }).toList();
     }
@@ -183,13 +183,11 @@ class _LocalScreenState extends State<LocalScreen> {
     return filtered;
   }
 
-  // Función para agregar al carrito
   void _addToCart(Map<String, dynamic> product) {
     setState(() {
       cartItems.add(product);
     });
 
-    // Mostrar snackbar de confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: primaryColor,
@@ -202,7 +200,6 @@ class _LocalScreenState extends State<LocalScreen> {
     );
   }
 
-    // Función para navegar a la pantalla del carrito
   void _navigateToCart() {
     Navigator.push(
       context,
@@ -219,6 +216,10 @@ class _LocalScreenState extends State<LocalScreen> {
     );
   }
 
+  Future<void> _refreshData() async {
+    await _loadData();
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -231,23 +232,19 @@ class _LocalScreenState extends State<LocalScreen> {
       backgroundColor: backgroundColor,
       appBar: _buildCustomAppBar(),
       body: _buildBody(),
-      bottomNavigationBar: _buildCartFooter(),
+      bottomNavigationBar: cartItems.isNotEmpty ? _buildCartFooter() : null,
     );
   }
 
-  // AppBar con imagen de fondo del local
   PreferredSizeWidget _buildCustomAppBar() {
     return AppBar(
       elevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () {
-          Navigator.pop(context); // Esto te llevará de vuelta al Home
-        },
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
       ),
       flexibleSpace: Stack(
         children: [
-          // Imagen de fondo del local
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -258,7 +255,6 @@ class _LocalScreenState extends State<LocalScreen> {
               ),
             ),
           ),
-          // Gradiente para mejorar legibilidad del texto
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -268,15 +264,14 @@ class _LocalScreenState extends State<LocalScreen> {
               ),
             ),
           ),
-          // Contenido del AppBar
           Padding(
             padding: const EdgeInsets.only(top: 80.0, left: 50.0, right: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Local de Doña Mari',
-                  style: TextStyle(
+                Text(
+                  widget.localName,
+                  style: const TextStyle(
                     fontSize: 24,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -296,195 +291,171 @@ class _LocalScreenState extends State<LocalScreen> {
           ),
         ],
       ),
-      toolbarHeight: 150, // Aumentado para la imagen
+      toolbarHeight: 150,
     );
   }
 
-  // Cuerpo principal con categorías, barra de búsqueda y tarjetas
   Widget _buildBody() {
-    return Column(
-      children: [
-        // Barra de búsqueda
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: SearchAnchor(
-            builder: (BuildContext context, SearchController controller) {
-              return SearchBar(
-                controller: controller,
-                padding: const WidgetStatePropertyAll<EdgeInsets>(
-                  EdgeInsets.symmetric(horizontal: 16.0),
-                ),
-                onTap: () {
-                  controller.openView();
-                },
-                onChanged: (_) {
-                  controller.openView();
-                },
-                leading: Icon(Icons.search, color: primaryColor),
-                trailing: [
-                  if (controller.text.isNotEmpty)
-                    IconButton(
-                      onPressed: () {
-                        controller.clear();
-                        setState(() {});
-                      },
-                      icon: Icon(Icons.close, color: primaryColor),
-                    ),
-                ],
-                backgroundColor: WidgetStatePropertyAll(Colors.white),
-                shadowColor: WidgetStatePropertyAll(textColor.withOpacity(0.1)),
-              );
-            },
-            suggestionsBuilder:
-                (BuildContext context, SearchController controller) {
-                  final suggestions = _productCards.where((product) {
-                    final title = product['title'].toString().toLowerCase();
-                    final searchText = controller.text.toLowerCase();
-                    return title.contains(searchText);
-                  }).toList();
-
-                  return suggestions.map((product) {
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getCategoryColor(
-                          product['category'],
-                        ).withOpacity(0.2),
-                        child: _getCategoryIcon(product['category']),
-                      ),
-                      title: Text(
-                        product['title'],
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['description'],
-                            style: TextStyle(color: textColor.withOpacity(0.7)),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getCategoryColor(
-                                product['category'],
-                              ).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              product['category'],
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: _getCategoryColor(product['category']),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: Text(
-                        '\$${product['price']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                        ),
-                      ),
-                      onTap: () {
-                        setState(() {
-                          controller.closeView(product['title']);
-                        });
-                      },
-                    );
-                  });
-                },
-          ),
-        ),
-
-        // Selector de categorías
-        SizedBox(
-          height: 50,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            //Contenido dinamico, las categorias vendran de la bd
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 5.0),
-                child: FilterChip(
-                  //Saca el nombre de las categorias de un arreglo y lo coloca como texto
-                  label: Text(categories[index]),
-                  selected: selectedCategoryIndex == index,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      selectedCategoryIndex = selected ? index : 0;
-                    });
-                  },
-                  backgroundColor: Colors.white,
-                  selectedColor: primaryColor,
-                  labelStyle: TextStyle(
-                    color: selectedCategoryIndex == index
-                        ? Colors.white
-                        : textColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  checkmarkColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: selectedCategoryIndex == index
-                          ? primaryColor
-                          : Colors.grey.shade300,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        // Indicador de resultados
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              //Muestra cuantos productos hay en cada categoria
-              Text(
-                _getResultsText(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: textColor.withOpacity(0.7),
-                ),
+    if (isLoading) {
+      return _buildLoadingState();
+    }
+    
+    if (hasError) {
+      return _buildErrorState();
+    }
+    
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      color: primaryColor,
+      child: Column(
+        children: [
+          // Barra de búsqueda
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: SearchBar(
+              controller: _searchController,
+              padding: const WidgetStatePropertyAll<EdgeInsets>(
+                EdgeInsets.symmetric(horizontal: 16.0),
               ),
-            ],
+              onChanged: (_) => setState(() {}),
+              leading: Icon(Icons.search, color: primaryColor),
+              trailing: [
+                if (_searchController.text.isNotEmpty)
+                  IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                    icon: Icon(Icons.close, color: primaryColor),
+                  ),
+              ],
+              hintText: 'Buscar platillos...',
+              backgroundColor: WidgetStatePropertyAll(Colors.white),
+              shadowColor: WidgetStatePropertyAll(textColor.withOpacity(0.1)),
+            ),
           ),
-        ),
 
-        // Lista de tarjetas filtradas
-        Expanded(
-          child: _filteredProducts.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _filteredProducts.length,
-                  itemBuilder: (context, index) {
-                    return _buildProductCard(_filteredProducts[index]);
-                  },
+          // Selector de categorías
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 5.0),
+                  child: FilterChip(
+                    label: Text(categories[index]['cat_nombre']),
+                    selected: selectedCategoryIndex == index,
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedCategoryIndex = selected ? index : 0;
+                      });
+                    },
+                    backgroundColor: Colors.white,
+                    selectedColor: primaryColor,
+                    labelStyle: TextStyle(
+                      color: selectedCategoryIndex == index ? Colors.white : textColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: selectedCategoryIndex == index ? primaryColor : Colors.grey.shade300,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Indicador de resultados
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Text(
+                  _getResultsText(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: textColor.withOpacity(0.7),
+                  ),
                 ),
-        ),
-      ],
+              ],
+            ),
+          ),
+
+          // Lista de productos
+          Expanded(
+            child: _filteredProducts.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      return _buildProductCard(_filteredProducts[index]);
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
-  // Estado cuando no hay resultados
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: primaryColor),
+          const SizedBox(height: 16),
+          Text(
+            'Cargando platillos...',
+            style: TextStyle(color: textColor.withOpacity(0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 80, color: Colors.red),
+          const SizedBox(height: 16),
+          Text(
+            'Error de conexión',
+            style: TextStyle(color: Colors.red, fontSize: 18),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: textColor.withOpacity(0.7)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _refreshData,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -493,7 +464,9 @@ class _LocalScreenState extends State<LocalScreen> {
           Icon(Icons.search_off, size: 80, color: textColor.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
-            'No se encontraron productos',
+            _searchController.text.isNotEmpty
+                ? 'No se encontraron resultados'
+                : 'No hay platillos disponibles',
             style: TextStyle(
               fontSize: 18,
               color: textColor.withOpacity(0.5),
@@ -501,30 +474,25 @@ class _LocalScreenState extends State<LocalScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Intenta con otros términos de búsqueda o categoría',
-            style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.4)),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _searchController.clear();
-                selectedCategoryIndex = 0;
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
+          if (_searchController.text.isNotEmpty)
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _searchController.clear();
+                  selectedCategoryIndex = 0;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Mostrar todos'),
             ),
-            child: Text('Mostrar todos los productos'),
-          ),
         ],
       ),
     );
   }
 
-  // Tarjeta de producto individual
   Widget _buildProductCard(Map<String, dynamic> product) {
     return Card(
       elevation: 4,
@@ -558,13 +526,13 @@ class _LocalScreenState extends State<LocalScreen> {
                 return Container(
                   height: 150,
                   color: secondaryColor.withOpacity(0.1),
-                  child: _getCategoryIcon(product['category']),
+                  child: Icon(Icons.fastfood, size: 50, color: primaryColor),
                 );
               },
             ),
           ),
 
-          // Contenido de la tarjeta
+          // Contenido
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -575,17 +543,17 @@ class _LocalScreenState extends State<LocalScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        //viene de la base de datos
                         product['title'],
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
-                      //viene de la base de datos
                       '\$${product['price']}',
                       style: TextStyle(
                         fontSize: 16,
@@ -597,23 +565,59 @@ class _LocalScreenState extends State<LocalScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  //viene de la base de datos
                   product['description'],
                   style: TextStyle(
                     fontSize: 14,
                     color: textColor.withOpacity(0.7),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getCategoryColor(product['category']).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        product['category'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _getCategoryColor(product['category']),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    if ((product['stock'] ?? 0) > 0)
+                      Text(
+                        'Stock: ${product['stock']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                        ),
+                      )
+                    else
+                      Text(
+                        'Agotado',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red,
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 16),
-
-                // Botón de acción
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      //recibe un producto para añadir al carrito
-                      _addToCart(product);
-                    },
+                    onPressed: () => _addToCart(product),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
@@ -622,12 +626,12 @@ class _LocalScreenState extends State<LocalScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.add_shopping_cart, size: 20),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Agregar al carrito',
                           style: TextStyle(
                             fontSize: 16,
@@ -646,14 +650,12 @@ class _LocalScreenState extends State<LocalScreen> {
     );
   }
 
-  // Footer del carrito
   Widget _buildCartFooter() {
     return Container(
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        //Sombra de la caja
         boxShadow: [
           BoxShadow(
             color: textColor.withOpacity(0.1),
@@ -668,11 +670,10 @@ class _LocalScreenState extends State<LocalScreen> {
       ),
       child: Row(
         children: [
-          // Icono del carrito con badge
           Stack(
             children: [
               IconButton(
-                onPressed:_navigateToCart,
+                onPressed: _navigateToCart,
                 icon: Icon(Icons.shopping_cart, size: 28, color: primaryColor),
               ),
               if (cartItems.isNotEmpty)
@@ -703,8 +704,6 @@ class _LocalScreenState extends State<LocalScreen> {
             ],
           ),
           const SizedBox(width: 12),
-
-          // Información del total
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,19 +727,17 @@ class _LocalScreenState extends State<LocalScreen> {
               ],
             ),
           ),
-
-          // Botón para ver carrito
           ElevatedButton(
-            onPressed: cartItems.isEmpty ? null : _navigateToCart,
+            onPressed: _navigateToCart,
             style: ElevatedButton.styleFrom(
-              backgroundColor: cartItems.isEmpty ? Colors.grey : primaryColor,
+              backgroundColor: primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: Text(
+            child: const Text(
               'Ver Carrito',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
@@ -750,44 +747,31 @@ class _LocalScreenState extends State<LocalScreen> {
     );
   }
 
-  // Funciones auxiliares para categorías
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Comida Rápida':
-        return const Color(0xFFFF724C); // Naranja
-      case 'Postres':
-        return const Color(0xFF9C27B0); // Morado
-      case 'Bebidas':
-        return const Color(0xFF2196F3); // Azul
+    switch (category.toLowerCase()) {
+      case 'comida rápida':
+      case 'comida rapida':
+        return const Color(0xFFFF724C);
+      case 'postres':
+        return const Color(0xFF9C27B0);
+      case 'bebidas':
+        return const Color(0xFF2196F3);
       default:
         return primaryColor;
     }
   }
 
-  Icon _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Comida Rápida':
-        return Icon(Icons.fastfood, color: _getCategoryColor(category));
-      case 'Postres':
-        return Icon(Icons.cake, color: _getCategoryColor(category));
-      case 'Bebidas':
-        return Icon(Icons.local_drink, color: _getCategoryColor(category));
-      default:
-        return Icon(Icons.fastfood, color: _getCategoryColor(category));
-    }
-  }
-
   String _getResultsText() {
-    //Si hay algo en la barra de busqueda y una categoria selecciona busca en esa categoria
+    final count = _filteredProducts.length;
+    
     if (_searchController.text.isNotEmpty && selectedCategoryIndex > 0) {
-      return '${_filteredProducts.length} resultados en ${categories[selectedCategoryIndex]}';
+      return '$count resultados en ${categories[selectedCategoryIndex]['cat_nombre']}';
     } else if (_searchController.text.isNotEmpty) {
-      return '${_filteredProducts.length} resultados encontrados';
+      return '$count resultados encontrados';
     } else if (selectedCategoryIndex > 0) {
-      //Si solo buscamos en categorias muestra cuanto productos hay en dicha categoria
-      return '${_filteredProducts.length} productos en ${categories[selectedCategoryIndex]}';
+      return '$count productos en ${categories[selectedCategoryIndex]['cat_nombre']}';
     } else {
-      return 'Todos los productos (${_filteredProducts.length})';
+      return 'Todos los productos ($count)';
     }
   }
 
@@ -795,20 +779,9 @@ class _LocalScreenState extends State<LocalScreen> {
     final now = DateTime.now();
     final days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
     ];
-
     return '${days[now.weekday - 1]}, ${now.day} de ${months[now.month - 1]} de ${now.year}';
   }
 }
